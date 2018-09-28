@@ -7,6 +7,7 @@ Web application for Reddit users to chat
 ### Prerequisites
 
 -[Docker]
+
 -[Compose]
 
 ### Running the app
@@ -14,7 +15,7 @@ Web application for Reddit users to chat
 make install
 
 If you want to detach eg. (-d) then run the following:
-EXPORT DETACH=1
+export DETACH=1 (or whatever it is for your shell)
 ```
 
 ### Additional make options
