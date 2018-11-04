@@ -1,11 +1,11 @@
 version: '3'
 
 services:
-  sgg-chat:
-    container_name: sgg-chat
+  gohat:
+    container_name: gochat
     depends_on: 
-      - sgg-redis
-    image: sgg-chat
+      - redis
+    image: gochat
     restart: always
     build:
       context: .
@@ -13,8 +13,8 @@ services:
     ports:
       - "8080:8080"
 
-  sgg-redis:
-    container_name: sgg-redis
+  redis:
+    container_name: redis
     restart: always
     image: redis
     volumes:
