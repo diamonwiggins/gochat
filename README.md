@@ -1,4 +1,4 @@
-# sweetspotgg
+# gochat
 
 ### Project status: Alpha
 
