@@ -2,7 +2,7 @@
 
 ### Project status: Alpha
 
-Simple chat application writen in Go
+Simple chat application written in Go
 
 Based on: https://github.com/scotch-io/go-realtime-chat
 
