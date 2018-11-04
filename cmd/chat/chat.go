@@ -93,7 +93,6 @@ func receiveMessages() {
 		}
 		psc := redis.PubSubConn{Conn: conn}
 		psc.Subscribe("allmessages")
-
 		for {
 			switch v := psc.Receive().(type) {
 			case redis.Message:
@@ -115,12 +114,14 @@ func receiveMessages() {
 }
 
 func broadcastMessages() {
-	msg := <-subChannel
-	for conn := range connections {
-		err := conn.WriteJSON(msg)
-		if err != nil {
-			log.Printf("error: %v", err)
-			delete(connections, conn)
+	for {
+		msg := <-subChannel
+		for conn := range connections {
+			err := conn.WriteJSON(msg)
+			if err != nil {
+				log.Printf("error: %v", err)
+				delete(connections, conn)
+			}
 		}
 	}
 }

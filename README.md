@@ -2,7 +2,8 @@
 
 ### Project status: Alpha
 
-Web application for Reddit users to chat
+Simple chat application writen in Go
+Based on: https://github.com/scotch-io/go-realtime-chat
 
 ### Prerequisites
 
