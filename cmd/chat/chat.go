@@ -67,7 +67,7 @@ func webSocketHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func publishMessages() {
-	conn, err := redis.Dial("tcp", "sgg-redis:6379")
+	conn, err := redis.Dial("tcp", "redis:6379")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,7 +87,7 @@ func publishMessages() {
 
 func receiveMessages() {
 	for {
-		conn, err := redis.Dial("tcp", "sgg-redis:6379")
+		conn, err := redis.Dial("tcp", "redis:6379")
 		if err != nil {
 			log.Fatal(err)
 		}
