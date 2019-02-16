@@ -9,12 +9,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
 type Message struct {
 	Timestamp string `json:"timestamp"`
 	Email     string `json:"email"`
@@ -46,6 +40,11 @@ func main() {
 }
 
 func webSocketHandler(w http.ResponseWriter, r *http.Request, senChan chan Message, conn map[*websocket.Conn]bool) {
+	var upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
