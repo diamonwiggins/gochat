@@ -9,10 +9,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var connections = make(map[*websocket.Conn]bool)
-var sendChannel = make(chan Message)
-var subChannel = make(chan Message)
-
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
@@ -27,14 +23,20 @@ type Message struct {
 }
 
 func main() {
+	var connections = make(map[*websocket.Conn]bool)
+	var sendChannel = make(chan Message)
+	var subChannel = make(chan Message)
+
 	fs := http.FileServer(http.Dir("/app/web"))
 	http.Handle("/", fs)
 
-	http.HandleFunc("/ws", webSocketHandler)
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		webSocketHandler(w, r, sendChannel, connections)
+	})
 
-	go publishMessages()
-	go receiveMessages()
-	go broadcastMessages()
+	go publishMessages(sendChannel)
+	go receiveMessages(subChannel)
+	go broadcastMessages(subChannel, connections)
 
 	log.Println("http server started on :8080")
 	err := http.ListenAndServe(":8080", nil)
@@ -43,13 +45,13 @@ func main() {
 	}
 }
 
-func webSocketHandler(w http.ResponseWriter, r *http.Request) {
+func webSocketHandler(w http.ResponseWriter, r *http.Request, senChan chan Message, conn map[*websocket.Conn]bool) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	connections[ws] = true
+	conn[ws] = true
 
 	for {
 		var msg Message
@@ -57,23 +59,23 @@ func webSocketHandler(w http.ResponseWriter, r *http.Request) {
 		err := ws.ReadJSON(&msg)
 		if err != nil {
 			log.Printf("error: %v", err)
-			delete(connections, ws)
+			delete(conn, ws)
 			break
 		}
 
-		sendChannel <- msg
+		senChan <- msg
 	}
 	defer ws.Close()
 }
 
-func publishMessages() {
+func publishMessages(senChan chan Message) {
 	conn, err := redis.Dial("tcp", "redis:6379")
 	if err != nil {
 		log.Fatal(err)
 	}
 	for {
 		select {
-		case currentMsg := <-sendChannel:
+		case currentMsg := <-senChan:
 			currentMsgMarshalled, err := json.Marshal(&currentMsg)
 			if err != nil {
 				log.Printf("error: %v", err)
@@ -85,7 +87,7 @@ func publishMessages() {
 	defer conn.Close()
 }
 
-func receiveMessages() {
+func receiveMessages(subChan chan Message) {
 	for {
 		conn, err := redis.Dial("tcp", "redis:6379")
 		if err != nil {
@@ -103,7 +105,7 @@ func receiveMessages() {
 					log.Printf("error: %v", err)
 					break
 				}
-				subChannel <- *currentMsgUnmarshalled
+				subChan <- *currentMsgUnmarshalled
 			case redis.Subscription:
 			case error:
 				return
@@ -113,14 +115,14 @@ func receiveMessages() {
 	}
 }
 
-func broadcastMessages() {
+func broadcastMessages(subChan chan Message, c map[*websocket.Conn]bool) {
 	for {
-		msg := <-subChannel
-		for conn := range connections {
+		msg := <-subChan
+		for conn := range c {
 			err := conn.WriteJSON(msg)
 			if err != nil {
 				log.Printf("error: %v", err)
-				delete(connections, conn)
+				delete(c, conn)
 			}
 		}
 	}

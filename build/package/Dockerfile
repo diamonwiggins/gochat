@@ -6,7 +6,7 @@ RUN apk add --no-cache git
 ADD https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 /usr/bin/dep
 RUN chmod +x /usr/bin/dep
 
-WORKDIR $GOPATH/src/github.com/sweetspotgg/
+WORKDIR $GOPATH/src/github.com/gochat/
 
 COPY ./cmd/ ./cmd/
 COPY ./vendor/ ./vendor/
